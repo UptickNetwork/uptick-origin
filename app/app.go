@@ -94,6 +94,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
 	ibcclient "github.com/cosmos/ibc-go/v5/modules/core/02-client"
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
@@ -124,6 +125,10 @@ import (
 	nfttransfer "github.com/bianjieai/nft-transfer"
 	ibcnfttransferkeeper "github.com/bianjieai/nft-transfer/keeper"
 	ibcnfttransfertypes "github.com/bianjieai/nft-transfer/types"
+
+	//internft "github.com/UptickNetwork/uptick/x/inter-nft"
+	//internftkeeper "github.com/UptickNetwork/uptick/x/inter-nft/keeper"
+	//internftmodule "github.com/UptickNetwork/uptick/x/inter-nft/module"
 
 	"github.com/UptickNetwork/uptick/x/internft"
 
@@ -204,8 +209,6 @@ var (
 		nftmodule.AppModuleBasic{},
 		nfttransfer.AppModuleBasic{},
 		nftmodule.AppModuleBasic{},
-
-		//internftmodule.AppModuleBasic{},
 		//
 	)
 
@@ -224,8 +227,7 @@ var (
 		erc721types.ModuleName: nil,
 
 		nfttypes.ModuleName: nil,
-		// nfttypes.ModuleName:        nil,
-		nft.ModuleName: nil,
+		nft.ModuleName:      nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -283,7 +285,6 @@ type Uptick struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedNFTTransferKeeper   capabilitykeeper.ScopedKeeper
 
-	//InterNFTKeeper       internftkeeper.Keeper
 	IBCNFTTransferKeeper ibcnfttransferkeeper.Keeper
 
 	// the module manager
@@ -555,7 +556,8 @@ func NewUptick(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		// AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(erc20types.RouterKey, erc20.NewErc20ProposalHandler(app.Erc20Keeper))
 
 	govConfig := govtypes.DefaultConfig()
@@ -603,6 +605,7 @@ func NewUptick(
 	app.IBCNFTTransferKeeper = ibcnfttransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibcnfttransfertypes.StoreKey],
+		app.GetSubspace(ibctransfertypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
@@ -610,7 +613,6 @@ func NewUptick(
 		internft.NewInterNftKeeper(appCodec, app.NFTKeeper, app.AccountKeeper),
 		scopedNFTTransferKeeper,
 	)
-
 	ibcnfttransferModule := nfttransfer.NewAppModule(app.IBCNFTTransferKeeper)
 	nfttransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
 
@@ -672,7 +674,6 @@ func NewUptick(
 		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper),
 
 		ibcnfttransferModule,
-		// interTxModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -1091,7 +1092,7 @@ func initParamsKeeper(
 func (app *Uptick) registerUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v0.2.6",
+		"v0.2.7",
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			// Refs:
 			// - https://docs.cosmos.network/master/building-modules/upgrade.html#registering-migrations
