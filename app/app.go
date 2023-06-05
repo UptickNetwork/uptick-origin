@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -30,8 +34,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -126,10 +132,6 @@ import (
 	ibcnfttransferkeeper "github.com/bianjieai/nft-transfer/keeper"
 	ibcnfttransfertypes "github.com/bianjieai/nft-transfer/types"
 
-	//internft "github.com/UptickNetwork/uptick/x/inter-nft"
-	//internftkeeper "github.com/UptickNetwork/uptick/x/inter-nft/keeper"
-	//internftmodule "github.com/UptickNetwork/uptick/x/inter-nft/module"
-
 	"github.com/UptickNetwork/uptick/x/internft"
 
 	"github.com/UptickNetwork/uptick/x/erc721"
@@ -156,7 +158,43 @@ func init() {
 const (
 	// Name defines the application binary name
 	Name = "uptickd"
+
+	// ProposalsEnabled If EnabledSpecificProposals is "", and this is "true", then enable all x/wasm proposals.
+	// If EnabledSpecificProposals is "", and this is not "true", then disable all x/wasm proposals.
+	ProposalsEnabled = "true"
+	// EnableSpecificProposals If set to non-empty string it must be comma-separated list of values that are all a subset
+	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
+	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
+	EnableSpecificProposals = ""
 )
+
+// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
+// produce a list of enabled proposals to pass into wasmd app.
+func GetEnabledProposals() []wasm.ProposalType {
+	if EnableSpecificProposals == "" {
+		if ProposalsEnabled == "true" {
+			return wasm.EnableAllProposals
+		}
+		return wasm.DisableAllProposals
+	}
+	chunks := strings.Split(EnableSpecificProposals, ",")
+	proposals, err := wasm.ConvertToProposals(chunks)
+	if err != nil {
+		panic(err)
+	}
+	return proposals
+}
+
+func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
+	var wasmOpts []wasm.Option
+	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
+		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
+	}
+
+	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewUptickWasmGasRegister()))
+
+	return wasmOpts
+}
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -210,6 +248,7 @@ var (
 		nfttransfer.AppModuleBasic{},
 		nftmodule.AppModuleBasic{},
 		//
+		wasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -228,6 +267,7 @@ var (
 
 		nfttypes.ModuleName: nil,
 		nft.ModuleName:      nil,
+		wasm.ModuleName:     {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -302,6 +342,11 @@ type Uptick struct {
 	Erc721Keeper erc721keeper.Keeper
 
 	NFTKeeper nftkeeper.Keeper
+
+	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	wasmKeeper       wasm.Keeper
+	scopedWasmKeeper capabilitykeeper.ScopedKeeper
+
 	// simulation manager
 	sm         *module.SimulationManager
 	tpsCounter *tpsCounter
@@ -317,7 +362,9 @@ func NewUptick(
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig simappparams.EncodingConfig,
+	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
+	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Uptick {
 
@@ -354,9 +401,6 @@ func NewUptick(
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 
-		// nft.StoreKey,
-		// nftkeeper.StoreKey,
-
 		authzkeeper.StoreKey,
 		// ethermint keys
 		evmtypes.StoreKey,
@@ -367,8 +411,8 @@ func NewUptick(
 		nfttypes.StoreKey,
 
 		// nfttypes.StoreKey,
-		// internft.StoreKey,
 		ibcnfttransfertypes.StoreKey,
+		wasm.StoreKey,
 	)
 
 	// Add the EVM transient store key
@@ -398,7 +442,7 @@ func NewUptick(
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	scopedNFTTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibcnfttransfertypes.ModuleName)
-
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	app.CapabilityKeeper.Seal()
@@ -560,6 +604,12 @@ func NewUptick(
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(erc20types.RouterKey, erc20.NewErc20ProposalHandler(app.Erc20Keeper))
 
+	// register wasm gov proposal types
+	// The gov proposal types can be individually enabled
+	if len(enabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.wasmKeeper, enabledProposals))
+	}
+
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
@@ -616,11 +666,42 @@ func NewUptick(
 	ibcnfttransferModule := nfttransfer.NewAppModule(app.IBCNFTTransferKeeper)
 	nfttransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
 
+	// this line is used by starport scaffolding # stargate/app/keeperDefinition
+	wasmDir := filepath.Join(homePath, "data")
+
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+
+	// The last arguments can contain custom message handlers, and custom query handlers,
+	// if we want to allow any custom callbacks
+	supportedFeatures := "iterator,staking,stargate"
+	app.wasmKeeper = wasm.NewKeeper(
+		appCodec,
+		keys[wasm.StoreKey],
+		app.GetSubspace(wasm.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		wasmOpts...,
+	)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack).
-		//AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.wasmKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(ibcnfttransfertypes.ModuleName, nfttransferIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -674,6 +755,8 @@ func NewUptick(
 		nftmodule.NewAppModule(app.appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper),
 
 		ibcnfttransferModule,
+		// this line is used by starport scaffolding # stargate/app/appModule
+		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -710,6 +793,7 @@ func NewUptick(
 		nfttypes.ModuleName,
 
 		ibcnfttransfertypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
@@ -739,6 +823,7 @@ func NewUptick(
 		erc721types.ModuleName,
 		nfttypes.ModuleName,
 		ibcnfttransfertypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -779,6 +864,7 @@ func NewUptick(
 		crisistypes.ModuleName,
 		nfttypes.ModuleName,
 		ibcnfttransfertypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -811,7 +897,7 @@ func NewUptick(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		//nftmodule.NewAppModule(app.appCodec, app.CollectionKeeper, app.AccountKeeper, app.BankKeeper),
-
+		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper),
 		ibcnfttransferModule,
 	)
@@ -829,15 +915,17 @@ func NewUptick(
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
 	options := ante.HandlerOptions{
-		AccountKeeper:   app.AccountKeeper,
-		BankKeeper:      app.BankKeeper,
-		IBCKeeper:       app.IBCKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		EvmKeeper:       app.EvmKeeper,
-		FeegrantKeeper:  app.FeeGrantKeeper,
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  SigVerificationGasConsumer,
-		MaxTxGasWanted:  maxGasWanted,
+		AccountKeeper:     app.AccountKeeper,
+		BankKeeper:        app.BankKeeper,
+		IBCKeeper:         app.IBCKeeper,
+		TxCounterStoreKey: keys[wasm.StoreKey],
+		WasmConfig:        wasmConfig,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		EvmKeeper:         app.EvmKeeper,
+		FeegrantKeeper:    app.FeeGrantKeeper,
+		SignModeHandler:   encodingConfig.TxConfig.SignModeHandler(),
+		SigGasConsumer:    SigVerificationGasConsumer,
+		MaxTxGasWanted:    maxGasWanted,
 	}
 
 	if err := options.Validate(); err != nil {
@@ -848,6 +936,15 @@ func NewUptick(
 	app.SetEndBlocker(app.EndBlocker)
 	app.registerUpgradeHandlers()
 
+	if manager := app.SnapshotManager(); manager != nil {
+		err = manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.wasmKeeper),
+		)
+		if err != nil {
+			panic("failed to register snapshot extension: " + err.Error())
+		}
+	}
+
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
@@ -856,6 +953,7 @@ func NewUptick(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+	app.scopedWasmKeeper = scopedWasmKeeper
 
 	// Finally start the tpsCounter.
 	app.tpsCounter = newTPSCounter(logger)
@@ -1086,13 +1184,15 @@ func initParamsKeeper(
 	// uptick subspaces
 	paramsKeeper.Subspace(erc20types.ModuleName)
 	paramsKeeper.Subspace(erc721types.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
+
 	return paramsKeeper
 }
 
 func (app *Uptick) registerUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v0.2.7",
+		"v0.2.9",
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			// Refs:
 			// - https://docs.cosmos.network/master/building-modules/upgrade.html#registering-migrations
