@@ -107,7 +107,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 
-	_ "github.com/evmos/ethermint/client/docs/statik" // unnamed import of statik for swagger UI support
+	_ "github.com/UptickNetwork/uptick/client/docs/statik"
 	"github.com/evmos/ethermint/encoding"
 	srvflags "github.com/evmos/ethermint/server/flags"
 	ethermint "github.com/evmos/ethermint/types"
@@ -1146,7 +1146,9 @@ func (app *Uptick) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
+	fmt.Printf("###xxl register swagger API 0 \n")
 	if apiConfig.Swagger {
+		fmt.Printf("###xxl register swagger API 1 \n")
 		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 	}
 }
