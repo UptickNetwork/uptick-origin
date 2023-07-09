@@ -1148,9 +1148,7 @@ func (app *Uptick) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
-	fmt.Printf("###xxl register swagger API 0 \n")
 	if apiConfig.Swagger {
-		fmt.Printf("###xxl register swagger API 1 \n")
 		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 	}
 }

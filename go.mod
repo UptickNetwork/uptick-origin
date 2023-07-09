@@ -209,6 +209,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/evmos/ethermint => github.com/bianjieai/ethermint v0.20.0-irishub-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// use informal system fork of tendermint
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 )
