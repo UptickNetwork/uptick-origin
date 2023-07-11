@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -193,17 +191,6 @@ func GetEnabledProposals() []wasm.ProposalType {
 		panic(err)
 	}
 	return proposals
-}
-
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
-	var wasmOpts []wasm.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewUptickWasmGasRegister()))
-
-	return wasmOpts
 }
 
 var (
@@ -1241,8 +1228,10 @@ func initParamsKeeper(
 
 func (app *Uptick) registerUpgradeHandlers() {
 
+	fmt.Printf("### xxl 0 come to registerUpgradeHandlers \n")
+	upgradeVersion := "v0.2.9"
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v0.2.9",
+		upgradeVersion,
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 			// Refs:
 			// - https://docs.cosmos.network/master/building-modules/upgrade.html#registering-migrations
@@ -1255,6 +1244,7 @@ func (app *Uptick) registerUpgradeHandlers() {
 			_ = app.mm.Modules[ibcnfttransfertypes.ModuleName].InitGenesis(
 				ctx, ibcnfttransfertypes.ModuleCdc, bz)
 
+			fmt.Printf("### xxl 1 vm %v \n", vm)
 			return app.mm.RunMigrations(ctx, app.configurator, vm)
 		})
 
@@ -1272,12 +1262,18 @@ func (app *Uptick) registerUpgradeHandlers() {
 
 	var storeUpgrades *storetypes.StoreUpgrades
 
-	// switch upgradeInfo.Name {
-	// case "v0.2":
-	// 	// no store upgrades in v0.2
-	// }
+	switch upgradeInfo.Name {
+	case upgradeVersion:
+		// add revenue module for testnet (v7 -> v8)
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{wasm.ModuleName, icahosttypes.StoreKey},
+		}
+	}
 
+	fmt.Printf("### xxl 2 storeUpgrades %v \n", storeUpgrades)
 	if storeUpgrades != nil {
+
+		fmt.Printf("### xxl 3 storeUpgrades %v \n", storeUpgrades)
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
