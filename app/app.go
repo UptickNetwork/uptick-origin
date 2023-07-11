@@ -1228,7 +1228,6 @@ func initParamsKeeper(
 
 func (app *Uptick) registerUpgradeHandlers() {
 
-	fmt.Printf("### xxl 0 come to registerUpgradeHandlers \n")
 	upgradeVersion := "v0.2.9"
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeVersion,
@@ -1244,7 +1243,6 @@ func (app *Uptick) registerUpgradeHandlers() {
 			_ = app.mm.Modules[ibcnfttransfertypes.ModuleName].InitGenesis(
 				ctx, ibcnfttransfertypes.ModuleCdc, bz)
 
-			fmt.Printf("### xxl 1 vm %v \n", vm)
 			return app.mm.RunMigrations(ctx, app.configurator, vm)
 		})
 
@@ -1270,10 +1268,8 @@ func (app *Uptick) registerUpgradeHandlers() {
 		}
 	}
 
-	fmt.Printf("### xxl 2 storeUpgrades %v \n", storeUpgrades)
 	if storeUpgrades != nil {
-
-		fmt.Printf("### xxl 3 storeUpgrades %v \n", storeUpgrades)
+		
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
