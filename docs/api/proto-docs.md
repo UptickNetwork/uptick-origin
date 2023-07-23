@@ -48,6 +48,34 @@
   
     - [Msg](#uptick.collection.v1.Msg)
   
+- [uptick/cw721/v1/cw721.proto](#uptick/cw721/v1/cw721.proto)
+    - [TokenPair](#uptick.cw721.v1.TokenPair)
+    - [UIDPair](#uptick.cw721.v1.UIDPair)
+  
+    - [Owner](#uptick.cw721.v1.Owner)
+  
+- [uptick/cw721/v1/genesis.proto](#uptick/cw721/v1/genesis.proto)
+    - [GenesisState](#uptick.cw721.v1.GenesisState)
+    - [Params](#uptick.cw721.v1.Params)
+  
+- [uptick/cw721/v1/query.proto](#uptick/cw721/v1/query.proto)
+    - [QueryParamsRequest](#uptick.cw721.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#uptick.cw721.v1.QueryParamsResponse)
+    - [QueryTokenPairRequest](#uptick.cw721.v1.QueryTokenPairRequest)
+    - [QueryTokenPairResponse](#uptick.cw721.v1.QueryTokenPairResponse)
+    - [QueryTokenPairsRequest](#uptick.cw721.v1.QueryTokenPairsRequest)
+    - [QueryTokenPairsResponse](#uptick.cw721.v1.QueryTokenPairsResponse)
+  
+    - [Query](#uptick.cw721.v1.Query)
+  
+- [uptick/cw721/v1/tx.proto](#uptick/cw721/v1/tx.proto)
+    - [MsgConvertCW721](#uptick.cw721.v1.MsgConvertCW721)
+    - [MsgConvertCW721Response](#uptick.cw721.v1.MsgConvertCW721Response)
+    - [MsgConvertNFT](#uptick.cw721.v1.MsgConvertNFT)
+    - [MsgConvertNFTResponse](#uptick.cw721.v1.MsgConvertNFTResponse)
+  
+    - [Msg](#uptick.cw721.v1.Msg)
+  
 - [uptick/erc20/v1/erc20.proto](#uptick/erc20/v1/erc20.proto)
     - [RegisterCoinProposal](#uptick.erc20.v1.RegisterCoinProposal)
     - [RegisterERC20Proposal](#uptick.erc20.v1.RegisterERC20Proposal)
@@ -755,6 +783,322 @@ Msg defines the nft Msg service.
 | `TransferNFT` | [MsgTransferNFT](#uptick.collection.v1.MsgTransferNFT) | [MsgTransferNFTResponse](#uptick.collection.v1.MsgTransferNFTResponse) | TransferNFT defines a method for transferring a nft. | |
 | `BurnNFT` | [MsgBurnNFT](#uptick.collection.v1.MsgBurnNFT) | [MsgBurnNFTResponse](#uptick.collection.v1.MsgBurnNFTResponse) | BurnNFT defines a method for burning a nft. | |
 | `TransferDenom` | [MsgTransferDenom](#uptick.collection.v1.MsgTransferDenom) | [MsgTransferDenomResponse](#uptick.collection.v1.MsgTransferDenomResponse) | TransferDenom defines a method for transferring a denom. | |
+
+ <!-- end services -->
+
+
+
+<a name="uptick/cw721/v1/cw721.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## uptick/cw721/v1/cw721.proto
+
+
+
+<a name="uptick.cw721.v1.TokenPair"></a>
+
+### TokenPair
+TokenPair defines an instance that records a pairing consisting of a native
+Cosmos Coin and an CW721 token address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `cw721_address` | [string](#string) |  | address of CW721 contract token |
+| `class_id` | [string](#string) |  | cosmos nft class ID to be mapped to |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.UIDPair"></a>
+
+### UIDPair
+defines the unique id of nft asset
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `cw721_did` | [string](#string) |  | address of CW721 contract token + tokenId |
+| `class_did` | [string](#string) |  | cosmos nft class ID to be mapped to + nftId |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="uptick.cw721.v1.Owner"></a>
+
+### Owner
+Owner enumerates the ownership of a CW721 contract.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| OWNER_UNSPECIFIED | 0 | OWNER_UNSPECIFIED defines an invalid/undefined owner. |
+| OWNER_MODULE | 1 | OWNER_MODULE cw721 is owned by the cw721 module account. |
+| OWNER_EXTERNAL | 2 | EXTERNAL cw721 is owned by an external account. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="uptick/cw721/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## uptick/cw721/v1/genesis.proto
+
+
+
+<a name="uptick.cw721.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#uptick.cw721.v1.Params) |  | module parameters |
+| `token_pairs` | [TokenPair](#uptick.cw721.v1.TokenPair) | repeated | registered token pairs |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.Params"></a>
+
+### Params
+Params defines the cw721 module params
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `enable_cw721` | [bool](#bool) |  | parameter to enable the conversion of Cosmos nft <--> CW721 tokens. |
+| `enable_evm_hook` | [bool](#bool) |  | parameter to enable the EVM hook that converts an CW721 token to a Cosmos NFT by transferring the Tokens through a MsgEthereumTx to the ModuleAddress Ethereum address. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="uptick/cw721/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## uptick/cw721/v1/query.proto
+
+
+
+<a name="uptick.cw721.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="uptick.cw721.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#uptick.cw721.v1.Params) |  |  |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.QueryTokenPairRequest"></a>
+
+### QueryTokenPairRequest
+QueryTokenPairRequest is the request type for the Query/TokenPair RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `token` | [string](#string) |  | token identifier can be either the hex contract address of the CW721 or the Cosmos nft classID |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.QueryTokenPairResponse"></a>
+
+### QueryTokenPairResponse
+QueryTokenPairResponse is the response type for the Query/TokenPair RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `token_pair` | [TokenPair](#uptick.cw721.v1.TokenPair) |  |  |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.QueryTokenPairsRequest"></a>
+
+### QueryTokenPairsRequest
+QueryTokenPairsRequest is the request type for the Query/TokenPairs RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.QueryTokenPairsResponse"></a>
+
+### QueryTokenPairsResponse
+QueryTokenPairsResponse is the response type for the Query/TokenPairs RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `token_pairs` | [TokenPair](#uptick.cw721.v1.TokenPair) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="uptick.cw721.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `TokenPairs` | [QueryTokenPairsRequest](#uptick.cw721.v1.QueryTokenPairsRequest) | [QueryTokenPairsResponse](#uptick.cw721.v1.QueryTokenPairsResponse) | TokenPairs retrieves registered token pairs | GET|/evmos/cw721/v1/token_pairs|
+| `TokenPair` | [QueryTokenPairRequest](#uptick.cw721.v1.QueryTokenPairRequest) | [QueryTokenPairResponse](#uptick.cw721.v1.QueryTokenPairResponse) | TokenPair retrieves a registered token pair | GET|/evmos/cw721/v1/token_pairs/{token}|
+| `Params` | [QueryParamsRequest](#uptick.cw721.v1.QueryParamsRequest) | [QueryParamsResponse](#uptick.cw721.v1.QueryParamsResponse) | Params retrieves the cw721 module params | GET|/evmos/cw721/v1/params|
+
+ <!-- end services -->
+
+
+
+<a name="uptick/cw721/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## uptick/cw721/v1/tx.proto
+
+
+
+<a name="uptick.cw721.v1.MsgConvertCW721"></a>
+
+### MsgConvertCW721
+MsgConvertCW721 defines a Msg to convert a CW721 token to a native Cosmos
+nft.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | CW721 token contract address registered in a token pair |
+| `token_ids` | [string](#string) | repeated | tokenID to convert |
+| `receiver` | [string](#string) |  | bech32 address to receive native Cosmos coins |
+| `sender` | [string](#string) |  | sender hex address from the owner of the given CW721 tokens |
+| `class_id` | [string](#string) |  | nft classID to cnvert to CW721 |
+| `nft_ids` | [string](#string) | repeated | nftID to cnvert to CW721 |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.MsgConvertCW721Response"></a>
+
+### MsgConvertCW721Response
+MsgConvertCW721Response returns no fields
+
+
+
+
+
+
+<a name="uptick.cw721.v1.MsgConvertNFT"></a>
+
+### MsgConvertNFT
+MsgConvertNFT defines a Msg to convert a native Cosmos nft to a CW721 token
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  | nft classID to cnvert to CW721 |
+| `nft_ids` | [string](#string) | repeated | nftID to cnvert to CW721 |
+| `receiver` | [string](#string) |  | recipient hex address to receive CW721 token |
+| `sender` | [string](#string) |  | cosmos bech32 address from the owner of the given Cosmos coins |
+| `contract_address` | [string](#string) |  | CW721 token contract address registered in a token pair |
+| `token_ids` | [string](#string) | repeated | CW721 token id registered in a token pair |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.MsgConvertNFTResponse"></a>
+
+### MsgConvertNFTResponse
+MsgConvertNFTResponse returns no fields
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="uptick.cw721.v1.Msg"></a>
+
+### Msg
+Msg defines the cw721 Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `ConvertNFT` | [MsgConvertNFT](#uptick.cw721.v1.MsgConvertNFT) | [MsgConvertNFTResponse](#uptick.cw721.v1.MsgConvertNFTResponse) | ConvertNFT mints a CW721 representation of the native Cosmos nft that is registered on the token mapping. | GET|/uptick/cw721/v1/tx/convert_nft|
+| `ConvertCW721` | [MsgConvertCW721](#uptick.cw721.v1.MsgConvertCW721) | [MsgConvertCW721Response](#uptick.cw721.v1.MsgConvertCW721Response) | ConvertCW721 mints a native Cosmos coin representation of the CW721 token contract that is registered on the token mapping. | GET|/uptick/cw721/v1/tx/convert_cw721|
 
  <!-- end services -->
 
