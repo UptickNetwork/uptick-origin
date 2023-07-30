@@ -139,9 +139,9 @@ func (k Keeper) ConvertERC721(
 
 // convertCosmos2Evm handles the nft conversion for a native ERC721 token
 // pair:
-//  - escrow nft on module account
-//  - unescrow nft that have been previously escrowed with ConvertERC721 and send to receiver
-//  - burn escrowed nft
+//   - escrow nft on module account
+//   - unescrow nft that have been previously escrowed with ConvertERC721 and send to receiver
+//   - burn escrowed nft
 func (k Keeper) convertCosmos2Evm(
 	ctx sdk.Context,
 	pair types.TokenPair,
@@ -192,20 +192,23 @@ func (k Keeper) convertCosmos2Evm(
 		if err != nil {
 			// mint
 			// mint enhance
+			fmt.Printf("xxl come to normal mintEnhance \n")
 			_, err = k.CallEVM(
 				ctx, erc721, types.ModuleAddress, contract, true,
 				"mintEnhance", receiver, bigTokenIds[i], reqInfo.GetName(), reqInfo.GetURI(), reqInfo.GetData(), reqInfo.GetURIHash())
 			if err != nil {
+				fmt.Printf("xxl come to normal mint %v\n", err)
 				// mint normal
 				_, err = k.CallEVM(
 					ctx, erc721, receiver, contract, true,
-					"mint", receiver, bigTokenIds[i])
+					"mint", receiver, bigTokenIds[i], reqInfo.GetURI())
 				if err != nil {
 					return nil, err
 				}
 			}
 		} else if owner == types.ModuleAddress {
 			// transfer
+			fmt.Printf("xxl come to normal safeTransferFrom \n")
 			_, err = k.CallEVM(
 				ctx, erc721, types.ModuleAddress, contract, true,
 				"safeTransferFrom", types.ModuleAddress, receiver, bigTokenIds[i])
@@ -246,8 +249,8 @@ func (k Keeper) convertCosmos2Evm(
 
 // convertEvm2Cosmos handles the erc721 conversion for a native erc721 token
 // pair:
-//  - escrow tokens on module account
-//  - mint nft to the receiver: nftId: tokenAddress|tokenID
+//   - escrow tokens on module account
+//   - mint nft to the receiver: nftId: tokenAddress|tokenID
 func (k Keeper) convertEvm2Cosmos(
 	ctx sdk.Context,
 	pair types.TokenPair,
