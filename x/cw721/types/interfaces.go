@@ -39,7 +39,7 @@ type NFTKeeper interface {
 }
 
 // EVMKeeper defines the expected EVM keeper interface used on cw721
-type EVMKeeper interface {
+type CWKeeper interface {
 	GetParams(ctx sdk.Context) evmtypes.Params
 	GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) *statedb.Account
 	EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error)

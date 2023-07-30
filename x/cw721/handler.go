@@ -19,6 +19,7 @@ func NewHandler(server types.MsgServer) sdk.Handler {
 		case *types.MsgConvertCW721:
 			res, err := server.ConvertCW721(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+			// return nil, nil
 		default:
 			err := sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, err

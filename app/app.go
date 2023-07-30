@@ -352,8 +352,9 @@ type Uptick struct {
 	NFTKeeper nftkeeper.Keeper
 
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
-	wasmKeeper       wasm.Keeper
-	scopedWasmKeeper capabilitykeeper.ScopedKeeper
+	wasmKeeper             wasm.Keeper
+	wasmPermissionedKeeper wasmkeeper.PermissionedKeeper
+	scopedWasmKeeper       capabilitykeeper.ScopedKeeper
 
 	// simulation manager
 	sm         *module.SimulationManager
@@ -604,15 +605,6 @@ func NewUptick(
 		app.EvmKeeper,
 	)
 
-	app.Cw721Keeper = cw721keeper.NewKeeper(
-		keys[cw721types.StoreKey],
-		appCodec,
-		app.GetSubspace(cw721types.ModuleName),
-		app.AccountKeeper,
-		app.NFTKeeper,
-		app.EvmKeeper,
-	)
-
 	// register the proposal types
 	// govRouter := govtypes.NewRouter()
 	govRouter := govv1beta1.NewRouter()
@@ -729,6 +721,16 @@ func NewUptick(
 		wasmConfig,
 		supportedFeatures,
 		wasmOpts...,
+	)
+
+	app.Cw721Keeper = cw721keeper.NewKeeper(
+		keys[cw721types.StoreKey],
+		appCodec,
+		app.GetSubspace(cw721types.ModuleName),
+		app.AccountKeeper,
+		app.NFTKeeper,
+		app.wasmKeeper,
+		&app.wasmPermissionedKeeper,
 	)
 
 	// Create static IBC router, add transfer route, then set and seal it
@@ -1052,6 +1054,8 @@ func (app *Uptick) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDelive
 // InitChainer updates at chain initialization
 func (app *Uptick) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState simapp.GenesisState
+	// var genesisState GenesisState
+
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
@@ -1253,6 +1257,8 @@ func (app *Uptick) registerUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeVersion,
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+
+			fmt.Println("xxl come tu upgrade ...")
 			// Refs:
 			// - https://docs.cosmos.network/master/building-modules/upgrade.html#registering-migrations
 			// - https://docs.cosmos.network/master/migrations/chain-upgrade-guide-044.html#chain-upgrade

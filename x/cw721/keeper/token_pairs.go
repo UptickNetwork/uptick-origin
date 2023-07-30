@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -25,17 +27,6 @@ func (k Keeper) GetTokenPairs(ctx sdk.Context) []types.TokenPair {
 	}
 
 	return tokenPairs
-}
-
-// GetTokenPairID returns the pair id from either of the registered tokens.
-func (k Keeper) GetTokenPairID(ctx sdk.Context, token string) []byte {
-
-	if common.IsHexAddress(token) {
-		addr := common.HexToAddress(token)
-		return k.GetCW721Map(ctx, addr)
-	}
-
-	return k.GetClassMap(ctx, token)
 }
 
 // GetTokenPair - get registered token pair from the identifier
@@ -63,6 +54,20 @@ func (k Keeper) SetTokenPair(ctx sdk.Context, tokenPair types.TokenPair) {
 	store.Set(key, bz)
 }
 
+// SetWasmCode stores a WasmCode
+func (k Keeper) SetWasmCode(ctx sdk.Context, account string, codeId uint64) {
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixWasmCode)
+	store.Set([]byte(account), []byte(strconv.FormatUint(codeId, 10)))
+}
+
+// GetWasmCode stores a WasmCode
+func (k Keeper) GetWasmCode(ctx sdk.Context, account string) []byte {
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixWasmCode)
+	return store.Get([]byte(account))
+}
+
 // DeleteTokenPair removes a token pair.
 func (k Keeper) DeleteTokenPair(ctx sdk.Context, tokenPair types.TokenPair) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPair)
@@ -70,22 +75,22 @@ func (k Keeper) DeleteTokenPair(ctx sdk.Context, tokenPair types.TokenPair) {
 	store.Delete(key)
 }
 
-// GetCW721Map returns the token pair id for the given address
-func (k Keeper) GetCW721Map(ctx sdk.Context, cw721 common.Address) []byte {
+// SetCW721Map sets the token pair id for the given address
+func (k Keeper) SetCW721Map(ctx sdk.Context, cw721 string, id []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByCW721)
-	return store.Get(cw721.Bytes())
+	store.Set([]byte(cw721), id)
+}
+
+// GetCW721Map returns the token pair id for the given address
+func (k Keeper) GetCW721Map(ctx sdk.Context, cw721 string) []byte {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByCW721)
+	return store.Get([]byte(cw721))
 }
 
 // GetClassMap returns the token pair id for the given class
 func (k Keeper) GetClassMap(ctx sdk.Context, classID string) []byte {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByClass)
 	return store.Get([]byte(classID))
-}
-
-// SetCW721Map sets the token pair id for the given address
-func (k Keeper) SetCW721Map(ctx sdk.Context, cw721 common.Address, id []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByCW721)
-	store.Set(cw721.Bytes(), id)
 }
 
 // DeleteCW721Map deletes the token pair id for the given address
@@ -107,9 +112,11 @@ func (k Keeper) IsTokenPairRegistered(ctx sdk.Context, id []byte) bool {
 }
 
 // IsCW721Registered check if registered CW721 token is registered
-func (k Keeper) IsCW721Registered(ctx sdk.Context, cw721 common.Address) bool {
+func (k Keeper) IsCW721Registered(ctx sdk.Context, cw721 string) bool {
+
+	fmt.Printf("xxl 00 come to IsCW721Registered ...\n")
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByCW721)
-	return store.Has(cw721.Bytes())
+	return store.Has([]byte(cw721))
 }
 
 // IsClassRegistered check if registered nft class is registered
@@ -128,6 +135,16 @@ func (k Keeper) SetNFTPairs(ctx sdk.Context, contractAddress string, tokenID str
 	if len(k.GetNFTPairByClassNFTID(ctx, classID, nftID)) == 0 {
 		k.SetNFTPairByClassNFTID(ctx, classID, nftID, contractAddress, tokenID)
 	}
+}
+
+// GetTokenPairID returns the pair id from either of the registered tokens.
+func (k Keeper) GetTokenPairID(ctx sdk.Context, token string) []byte {
+
+	if common.IsHexAddress(token) {
+		return k.GetCW721Map(ctx, token)
+	}
+
+	return k.GetClassMap(ctx, token)
 }
 
 func (k Keeper) SetNFTPairByContractTokenID(ctx sdk.Context, contractAddress string, tokenID string, classID string, nftID string) {

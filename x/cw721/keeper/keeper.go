@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	nftkeeper "github.com/UptickNetwork/uptick/x/collection/keeper"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 
@@ -14,6 +13,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/UptickNetwork/uptick/x/cw721/types"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // Keeper of this module maintains collections of cw721.
@@ -22,10 +23,11 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramstore paramtypes.Subspace
 
-	accountKeeper types.AccountKeeper
-	nftKeeper     nftkeeper.Keeper
-	evmKeeper     types.EVMKeeper
-	ics4Wrapper   porttypes.ICS4Wrapper
+	accountKeeper        types.AccountKeeper
+	nftKeeper            nftkeeper.Keeper
+	cwKeeper             wasmkeeper.Keeper
+	cwPermissionedKeeper *wasmkeeper.PermissionedKeeper
+	ics4Wrapper          porttypes.ICS4Wrapper
 }
 
 // NewKeeper creates new instances of the cw721 Keeper
@@ -34,19 +36,21 @@ func NewKeeper(storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	ak types.AccountKeeper,
 	nk nftkeeper.Keeper,
-	ek types.EVMKeeper) Keeper {
+	ek wasmkeeper.Keeper,
+	pk *wasmkeeper.PermissionedKeeper) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		storeKey:      storeKey,
-		cdc:           cdc,
-		paramstore:    ps,
-		accountKeeper: ak,
-		nftKeeper:     nk,
-		evmKeeper:     ek,
+		storeKey:             storeKey,
+		cdc:                  cdc,
+		paramstore:           ps,
+		accountKeeper:        ak,
+		nftKeeper:            nk,
+		cwKeeper:             ek,
+		cwPermissionedKeeper: pk,
 	}
 }
 

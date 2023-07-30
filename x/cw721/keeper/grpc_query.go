@@ -63,6 +63,7 @@ func (k Keeper) TokenPair(c context.Context, req *types.QueryTokenPairRequest) (
 	}
 
 	return &types.QueryTokenPairResponse{TokenPair: pair}, nil
+	//return nil, nil
 }
 
 // Params returns the params of the erc20 module

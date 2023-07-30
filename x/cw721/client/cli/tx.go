@@ -6,14 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/UptickNetwork/uptick/x/cw721/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	ethermint "github.com/evmos/ethermint/types"
-
-	"github.com/UptickNetwork/uptick/x/cw721/types"
 )
 
 // NewTxCmd returns a root CLI command handler for cw721 transaction commands
@@ -63,11 +60,8 @@ func NewConvertNFTCmd() *cobra.Command {
 			sender := cliCtx.GetFromAddress()
 			if len(args) == 5 {
 				receiver = args[4]
-				if err := ethermint.ValidateAddress(receiver); err != nil {
-					return fmt.Errorf("invalid receiver hex address %w", err)
-				}
 			} else {
-				receiver = common.BytesToAddress(sender).Hex()
+				receiver = sender.String()
 			}
 
 			msg := &types.MsgConvertNFT{
@@ -106,16 +100,13 @@ func NewConvertCW721Cmd() *cobra.Command {
 			}
 
 			contractAddress := args[0]
-			if err := ethermint.ValidateAddress(contractAddress); err != nil {
-				return fmt.Errorf("invalid cw721 contract address %w", err)
-			}
-
 			tokenIDs := strings.Split(args[1], ",")
 			if len(tokenIDs) == 0 {
 				return fmt.Errorf("tokenID can not be empty")
 			}
 
-			from := common.BytesToAddress(cliCtx.GetFromAddress().Bytes())
+			// from := common.BytesToAddress(cliCtx.GetFromAddress().Bytes())
+			from := cliCtx.GetFromAddress()
 
 			classID := args[2]
 			nftIDs := strings.Split(args[3], ",")
@@ -132,7 +123,7 @@ func NewConvertCW721Cmd() *cobra.Command {
 				ContractAddress: contractAddress,
 				TokenIds:        tokenIDs,
 				Receiver:        receiver.String(),
-				Sender:          from.Hex(),
+				Sender:          from.String(),
 				ClassId:         classID,
 				NftIds:          nftIDs,
 			}

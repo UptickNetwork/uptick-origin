@@ -1,10 +1,16 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/UptickNetwork/uptick/x/cw721/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"strconv"
 )
+
+const UPTICK_CW721_LABLE = "Uptick CW721"
+const UPTICK_CW721_NAME = "Uptick CW721"
+const UPTICK_CW721_SYMBOL = "UCW721"
 
 // GetParams returns the total set of erc20 parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
@@ -31,12 +37,17 @@ func (k Keeper) GetClassIDAndNFTID(ctx sdk.Context, msg *types.MsgConvertCW721) 
 	for i, tokenId := range msg.TokenIds {
 
 		uTokenId := types.CreateTokenUID(msg.ContractAddress, tokenId)
+
+		fmt.Printf("xxl 011 GetClassIDAndNFTID uTokenId %v \n", uTokenId)
 		savedNftId, savedClassId := types.GetNFTFromUID(string(k.GetNFTUIDPairByTokenUID(ctx, uTokenId)))
 
+		fmt.Printf("xxl 012 GetClassIDAndNFTID savedNftId %v savedClassId %v\n", savedNftId, savedClassId)
 		nftOrg = ""
 		if len(msg.NftIds) > i {
 			nftOrg = msg.NftIds[i]
 		}
+
+		fmt.Printf("xxl 013 GetClassIDAndNFTID nftOrg %v tokenId %v savedNftId %v\n", nftOrg, tokenId, savedNftId)
 		nftId, err = getNftData(nftOrg, tokenId, savedNftId, 0)
 
 		nftIds = append(nftIds, nftId)
@@ -64,16 +75,39 @@ func (k Keeper) GetContractAddressAndTokenIds(ctx sdk.Context, msg *types.MsgCon
 	)
 
 	pair, err := k.GetPair(ctx, msg.ClassId)
+	fmt.Printf("xxl GetContractAddressAndTokenIds pair %v : err %v \n", pair, err)
 	if err != nil {
 
-		msg.TokenIds, _ = getNftDatas(msg.TokenIds, msg.NftIds, nil, 2)
-		//Stop here ... ...
-		CW721ContractAddress, err := k.DeployCW721Contract(ctx, msg)
-		if err == nil {
-			contractAddress = CW721ContractAddress.String()
+		resultBytes := k.GetWasmCode(ctx, types.AccModuleAddress.String())
+		fmt.Printf("xxl 005 GetContractAddressAndTokenIds  %v \n ", string(resultBytes))
+		resultInt64, _ := strconv.ParseUint(string(resultBytes), 10, 64)
+
+		if resultInt64 <= 0 {
+			codeId, err := k.StoreWasmContract(ctx, "./cw721_base.wasm", types.AccModuleAddress.String())
+			if err != nil {
+				fmt.Printf("xxl 01 GetContractAddressAndTokenIds error:%v \n ", err)
+				return "", nil, err
+			} else {
+				fmt.Printf("xxl 01 GetContractAddressAndTokenIds codeId:%v \n ", codeId)
+				k.SetWasmCode(ctx, types.AccModuleAddress.String(), codeId)
+			}
 		}
 
-		return contractAddress, msg.TokenIds, nil
+		contractAddress, err = k.InstantiateWasmContract(
+			ctx,
+			types.AccModuleAddress.String(),
+			resultInt64,
+			UPTICK_CW721_LABLE,
+			UPTICK_CW721_NAME,
+			UPTICK_CW721_SYMBOL,
+			types.AccModuleAddress.String(),
+		)
+
+		if err == nil {
+			return contractAddress, msg.NftIds, err
+		} else {
+			return "", msg.NftIds, err
+		}
 
 	} else {
 		var (
@@ -146,7 +180,7 @@ func getNftData(nftOrg string, nftPairOrg string, nftSaved string, nftType int) 
 	if nftOrg == "" {
 		if nftSaved == "" {
 			// nftRet = createNftDataByType(nftPairOrg, nftType)
-			nftRet = nftOrg
+			nftRet = nftPairOrg
 		} else {
 			nftRet = nftSaved
 		}

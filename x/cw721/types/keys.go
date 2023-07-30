@@ -37,11 +37,11 @@ const (
 	prefixTokenPair = iota + 1
 	prefixTokenPairByCW721
 	prefixTokenPairByClass
-	//prefixNFTPairByNFTID
-	//prefixNFTPairByTokenID
 
 	prefixNFTUIDPairByNFTUID
 	prefixNFTUIDPairByTokenUID
+
+	prefixWasmCode
 )
 
 // KVStore key prefixes
@@ -49,9 +49,9 @@ var (
 	KeyPrefixTokenPair        = []byte{prefixTokenPair}
 	KeyPrefixTokenPairByCW721 = []byte{prefixTokenPairByCW721}
 	KeyPrefixTokenPairByClass = []byte{prefixTokenPairByClass}
-	//KeyPrefixNFTPairByNFTID    = []byte{prefixNFTPairByNFTID}
-	//KeyPrefixNFTPairByTokenID  = []byte{prefixNFTPairByTokenID}
 
 	KeyPrefixNFTUIDPairByNFTUID   = []byte{prefixNFTUIDPairByNFTUID}
 	KeyPrefixNFTUIDPairByTokenUID = []byte{prefixNFTUIDPairByTokenUID}
+
+	KeyPrefixWasmCode = []byte{prefixWasmCode}
 )

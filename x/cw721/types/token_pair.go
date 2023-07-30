@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,9 +11,9 @@ import (
 )
 
 // NewTokenPair returns an instance of TokenPair
-func NewTokenPair(cw721Address common.Address, classID string) TokenPair {
+func NewTokenPair(cw721Address string, classID string) TokenPair {
 	return TokenPair{
-		Cw721Address: cw721Address.String(),
+		Cw721Address: cw721Address,
 		ClassId:      classID,
 	}
 }
@@ -30,8 +31,11 @@ func (tp TokenPair) GetCW721Contract() common.Address {
 
 // Validate performs a stateless validation of a TokenPair
 func (tp TokenPair) Validate() error {
+
+	fmt.Println("xxl 00 Validate")
 	if err := sdk.ValidateDenom(tp.ClassId); err != nil {
 		return err
 	}
+	fmt.Printf("xxl 01 Validate %v \n", tp)
 	return ethermint.ValidateAddress(tp.Cw721Address)
 }
