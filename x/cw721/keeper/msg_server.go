@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	nftTypes "github.com/UptickNetwork/uptick/x/collection/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
@@ -22,13 +21,11 @@ func (k Keeper) ConvertCW721(
 	*types.MsgConvertCW721Response, error,
 ) {
 
-	fmt.Printf("xxl 0 ConvertCW721 %v \n", msg)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	//classId, nftId
 	classId, nftIds, err := k.GetClassIDAndNFTID(ctx, msg)
 
-	fmt.Printf("xxl 01 ConvertCW721 %v-%v-%v \n", classId, nftIds, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -39,18 +36,11 @@ func (k Keeper) ConvertCW721(
 	// sender := common.HexToAddress(msg.Sender)
 
 	id := k.GetCW721Map(ctx, msg.ContractAddress)
-	fmt.Printf("xxl 1 GetTokenPairID %v \n", id)
 	if len(id) == 0 {
 		_, err := k.RegisterCW721(ctx, msg)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	pair, err := k.GetPair(ctx, msg.ContractAddress)
-	fmt.Printf("xxl 2 GetPair %v \n", pair)
-	if err != nil {
-		return nil, err
 	}
 
 	return k.convertWasm2Cosmos(ctx, msg) //
@@ -74,14 +64,10 @@ func (k Keeper) convertWasm2Cosmos(
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("xxl 3 allNftInfo %v \n", allNftInfo)
 
 		if allNftInfo.Access.Owner != msg.Sender {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of cw721 token %s", msg.Sender, strings.Join(msg.TokenIds, ","))
 		}
-
-		fmt.Printf("xxl 3 msg %v \n", msg)
-		// fmt.Printf("xxl 00 convertWasm2Cosmos %v-%v-%v \n", i, tokenId, types.AccModuleAddress)
 
 		// transfer to module address
 		_, err = k.TransferCw721(ctx, msg.ContractAddress, tokenId, types.AccModuleAddress.String(), msg.Sender)
@@ -92,7 +78,6 @@ func (k Keeper) convertWasm2Cosmos(
 		// query cw721 token
 		nftId := string(k.GetNFTPairByContractTokenID(ctx, msg.ContractAddress, tokenId))
 		if nftId == "" {
-			fmt.Printf("xxl 01 convertWasm2Cosmos to MsgMintNFT %v \n", nftId)
 
 			mintNFT := nftTypes.MsgMintNFT{
 				DenomId:   msg.ClassId,
@@ -110,7 +95,6 @@ func (k Keeper) convertWasm2Cosmos(
 				return nil, err
 			}
 		} else {
-			fmt.Printf("xxl 02 convertWasm2Cosmos to MsgTransferNFT %v \n", nftId)
 
 			transferNft := nftTypes.MsgTransferNFT{
 				DenomId:   msg.ClassId,
@@ -145,22 +129,18 @@ func (k Keeper) ConvertNFT(
 	*types.MsgConvertNFTResponse, error,
 ) {
 
-	fmt.Printf("xxl 00 ConvertNFT  \n")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	//classId, nftIDs
 	contractAddress, tokenIds, err := k.GetContractAddressAndTokenIds(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("xxl 01 contractAddress %v : tokenIds %v \n", contractAddress, tokenIds)
 
 	msg.ContractAddress = contractAddress
 	msg.TokenIds = tokenIds
 
 	id := k.GetClassMap(ctx, msg.ContractAddress)
-	fmt.Printf("xxl 02 id %v : msg %v \n", id, msg)
 	if len(id) == 0 {
-		fmt.Printf("xxl 02.1 before RegisterNFT id %v : msg %v \n", id, msg)
 		_, err := k.RegisterNFT(ctx, msg)
 		if err != nil {
 			return nil, err
@@ -201,7 +181,6 @@ func (k Keeper) convertCosmos2Wasm(
 	*types.MsgConvertNFTResponse, error,
 ) {
 
-	fmt.Printf("xxl 00 convertCosmos2Wasm %v \n", msg)
 	for i, tokenId := range msg.TokenIds {
 
 		reqInfo, err := k.nftKeeper.GetNFT(ctx, msg.ClassId, msg.NftIds[i])
@@ -226,8 +205,6 @@ func (k Keeper) convertCosmos2Wasm(
 		//	does token id exist
 		// owner, err := k.QueryCW721TokenOwner(ctx, common.HexToAddress(msg.ContractAddress), bigTokenIds[i])
 		nftInfo, err := k.QueryCW721AllNftInfo(ctx, msg.ContractAddress, tokenId)
-		fmt.Printf("xxl 01 convertCosmos2Wasm nftInfo %v - err %v \n", nftInfo.Access.Owner, err)
-		fmt.Printf("xxl 01 convertCosmos2Wasm ModuleAddress %v  \n", types.AccModuleAddress.String())
 
 		if err != nil {
 

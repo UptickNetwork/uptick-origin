@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"sync"
 
@@ -40,20 +39,15 @@ func (k Keeper) QueryCW721(
 	jsonStr, err := json.Marshal(contractInfo)
 
 	if err != nil {
-		fmt.Printf("xxl 00 QueryCW721 json.Marshal Error : %s \n", err.Error())
 		return types.CW721Data{}, err
 	} else {
-		fmt.Printf("xxl 01 QueryCW721 quiry info : %s \n", string(jsonStr))
-		fmt.Printf("xxl 02 QueryCW721 contractAddress : %s \n", contractAddress)
 		contractInfoResult, err := k.QueryWasmState(ctx,
 			&wasmtypes.QuerySmartContractStateRequest{
 				Address:   contractAddress,
 				QueryData: jsonStr,
 			})
 
-		fmt.Printf("xxl 03 QueryCW721 contractInfoResult : %s \n", contractInfoResult)
 		if err != nil {
-			fmt.Printf("xxl QueryCW721 Error : %s \n", err.Error())
 			return types.CW721Data{}, err
 		}
 
@@ -99,19 +93,14 @@ func (k Keeper) QueryCW721AllNftInfo(
 
 	jsonConditionStr, err := json.Marshal(allNftInfoCondition)
 	if err != nil {
-		fmt.Printf("xxl json.Marshal Error: %s", err.Error())
 		return AllNftInfo{}, err
 	} else {
-		fmt.Println(string(jsonConditionStr))
-		fmt.Printf("xxl 00 QueryCW721AllNftInfo address %s - condition: %s \n", contractAddress, string(jsonConditionStr))
-
 		allNftInfo, err := k.QueryWasmState(ctx,
 			&wasmtypes.QuerySmartContractStateRequest{
 				Address:   contractAddress,
 				QueryData: jsonConditionStr,
 			})
 		if err != nil {
-			fmt.Printf("xxl 3.5 Error: %s", err.Error())
 			return AllNftInfo{}, err
 		}
 
@@ -196,7 +185,6 @@ func (k Keeper) InstantiateWasmContract(
 	instantiateInfo.Minter = minter
 	instantiateInfoJsonStr, err := json.Marshal(instantiateInfo)
 	if err != nil {
-		fmt.Printf("xxl 00 InstantiateWasmContract Error: %s", err.Error())
 		return "", err
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(wasmkeeper.NewDefaultPermissionKeeper(k.cwKeeper))
@@ -242,10 +230,8 @@ func (k Keeper) MintCw721(
 	mintInfo.Mint = mintInfoData
 	mintJsonStr, err := json.Marshal(mintInfo)
 	if err != nil {
-		fmt.Printf("xxl 3.6 MintCw721 Error: %s", err.Error())
 		return nil, err
 	} else {
-		fmt.Printf("xxl 3.7 MintCw721: %v \n", string(mintJsonStr))
 
 		// Execute the contract
 		funds := sdk.NewCoins(sdk.NewCoin("uptick", sdk.ZeroInt()))
@@ -256,12 +242,8 @@ func (k Keeper) MintCw721(
 			Msg:      wasmtypes.RawContractMessage(mintJsonStr),
 			Funds:    funds,
 		}
-		fmt.Printf("xxl 4 MintCw721 is %v \n", execMsg)
 		_, err := k.ExecWasmMsg(ctx, &execMsg)
-
-		fmt.Printf("xxl 5 MintCw721 is err %v \n", err)
 		if err != nil {
-			fmt.Printf("xxl 5.1 MintCw721  Error: %s", err.Error())
 			return nil, err
 		} else {
 			return nil, nil
@@ -297,14 +279,10 @@ func (k Keeper) TransferCw721(
 	transferNftData.Recipient = recipient
 	transferNftInfo.TransferNft = transferNftData
 
-	fmt.Printf("xxl 00 TransferCw721 : %s-%s-%s-%s \n", contractAddress, tokenId, recipient, sender)
-
 	transferJsonStr, err := json.Marshal(transferNftInfo)
 	if err != nil {
-		fmt.Printf("xxl 01 TransferCw721 Error: %s \n", err.Error())
 		return nil, err
 	} else {
-		fmt.Printf("xxl 02 TransferCw721 info: %v \n", string(transferJsonStr))
 
 		// Execute the contract
 		funds := sdk.NewCoins(sdk.NewCoin("uptick", sdk.ZeroInt()))
@@ -314,11 +292,9 @@ func (k Keeper) TransferCw721(
 			Msg:      wasmtypes.RawContractMessage(transferJsonStr),
 			Funds:    funds,
 		}
-		fmt.Printf("xxl 03 TransferCw721 contract err3 is %v \n", execMsg)
 
 		_, err := k.ExecWasmMsg(ctx, &execMsg)
 		if err != nil {
-			fmt.Printf("xxl 04 TransferCw721 4.1 Error: %s \n", err.Error())
 			return nil, err
 		} else {
 			return nil, nil
@@ -336,7 +312,6 @@ func (k Keeper) ExecWasmMsg(
 		return nil, sdkerrors.Wrapf(types.ErrABIPack, "nft class is invalid %s: %s", execMsg.Msg, err.Error())
 	}
 
-	fmt.Printf("xxl 1 ExecWasmMsg %v - %v \n", wasmkeeper.NewDefaultPermissionKeeper(k.cwKeeper), execMsg)
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(wasmkeeper.NewDefaultPermissionKeeper(k.cwKeeper))
 	return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
 }

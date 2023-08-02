@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
@@ -114,7 +113,6 @@ func (k Keeper) IsTokenPairRegistered(ctx sdk.Context, id []byte) bool {
 // IsCW721Registered check if registered CW721 token is registered
 func (k Keeper) IsCW721Registered(ctx sdk.Context, cw721 string) bool {
 
-	fmt.Printf("xxl 00 come to IsCW721Registered ...\n")
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairByCW721)
 	return store.Has([]byte(cw721))
 }

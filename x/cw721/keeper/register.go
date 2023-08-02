@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
@@ -53,15 +52,12 @@ func (k Keeper) RegisterCW721(ctx sdk.Context, msg *types.MsgConvertCW721) (*typ
 // CreateNFTClass generates the metadata to represent the CW721 token .
 func (k Keeper) CreateNFTClass(ctx sdk.Context, msg *types.MsgConvertCW721) error {
 
-	fmt.Printf("xxl 00 CreateNFTClass \n")
 	contract := common.HexToAddress(msg.ContractAddress)
 
 	cw721Data, err := k.QueryCW721(ctx, msg.ContractAddress)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("xxl 01 CreateNFTClass cw721Data %v\n", cw721Data)
 
 	classEnhance, err := k.QueryClassEnhance(ctx, contract)
 	// TODO need to add enchance case
@@ -79,10 +75,8 @@ func (k Keeper) CreateNFTClass(ctx sdk.Context, msg *types.MsgConvertCW721) erro
 	if k.IsClassRegistered(ctx, msg.ClassId) {
 		return sdkerrors.Wrapf(types.ErrInternalTokenPair, "nft class already registered: %s", msg.ClassId)
 	}
-	fmt.Printf("xxl 02 IsClassRegistered classEnhance %v\n", classEnhance)
 
 	_, err = k.nftKeeper.GetDenomInfo(ctx, msg.ClassId)
-	fmt.Printf("xxl 03 IsClassRegistered err %v\n", err)
 	if err == nil {
 		return nil
 	}
@@ -93,8 +87,6 @@ func (k Keeper) CreateNFTClass(ctx sdk.Context, msg *types.MsgConvertCW721) erro
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("xxl 04 IsClassRegistered %v-%v-%v\n", msg, cw721Data, classEnhance)
 
 	return nil
 }

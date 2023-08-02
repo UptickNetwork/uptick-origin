@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"github.com/UptickNetwork/uptick/x/cw721/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -37,17 +36,13 @@ func (k Keeper) GetClassIDAndNFTID(ctx sdk.Context, msg *types.MsgConvertCW721) 
 	for i, tokenId := range msg.TokenIds {
 
 		uTokenId := types.CreateTokenUID(msg.ContractAddress, tokenId)
-
-		fmt.Printf("xxl 011 GetClassIDAndNFTID uTokenId %v \n", uTokenId)
 		savedNftId, savedClassId := types.GetNFTFromUID(string(k.GetNFTUIDPairByTokenUID(ctx, uTokenId)))
 
-		fmt.Printf("xxl 012 GetClassIDAndNFTID savedNftId %v savedClassId %v\n", savedNftId, savedClassId)
 		nftOrg = ""
 		if len(msg.NftIds) > i {
 			nftOrg = msg.NftIds[i]
 		}
 
-		fmt.Printf("xxl 013 GetClassIDAndNFTID nftOrg %v tokenId %v savedNftId %v\n", nftOrg, tokenId, savedNftId)
 		nftId, err = getNftData(nftOrg, tokenId, savedNftId, 0)
 
 		nftIds = append(nftIds, nftId)
@@ -75,20 +70,16 @@ func (k Keeper) GetContractAddressAndTokenIds(ctx sdk.Context, msg *types.MsgCon
 	)
 
 	pair, err := k.GetPair(ctx, msg.ClassId)
-	fmt.Printf("xxl GetContractAddressAndTokenIds pair %v : err %v \n", pair, err)
 	if err != nil {
 
 		resultBytes := k.GetWasmCode(ctx, types.AccModuleAddress.String())
-		fmt.Printf("xxl 005 GetContractAddressAndTokenIds  %v \n ", string(resultBytes))
 		resultInt64, _ := strconv.ParseUint(string(resultBytes), 10, 64)
 
 		if resultInt64 <= 0 {
 			codeId, err := k.StoreWasmContract(ctx, "./cw721_base.wasm", types.AccModuleAddress.String())
 			if err != nil {
-				fmt.Printf("xxl 01 GetContractAddressAndTokenIds error:%v \n ", err)
 				return "", nil, err
 			} else {
-				fmt.Printf("xxl 01 GetContractAddressAndTokenIds codeId:%v \n ", codeId)
 				k.SetWasmCode(ctx, types.AccModuleAddress.String(), codeId)
 			}
 		}

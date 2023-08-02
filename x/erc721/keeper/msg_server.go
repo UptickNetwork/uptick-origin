@@ -191,13 +191,11 @@ func (k Keeper) convertCosmos2Evm(
 		owner, err := k.QueryERC721TokenOwner(ctx, common.HexToAddress(msg.ContractAddress), bigTokenIds[i])
 		if err != nil {
 			// mint
-			// mint enhance
-			fmt.Printf("xxl come to normal mintEnhance \n")
+			// mint enhance )
 			_, err = k.CallEVM(
 				ctx, erc721, types.ModuleAddress, contract, true,
 				"mintEnhance", receiver, bigTokenIds[i], reqInfo.GetName(), reqInfo.GetURI(), reqInfo.GetData(), reqInfo.GetURIHash())
 			if err != nil {
-				fmt.Printf("xxl come to normal mint %v\n", err)
 				// mint normal
 				_, err = k.CallEVM(
 					ctx, erc721, receiver, contract, true,
@@ -208,7 +206,6 @@ func (k Keeper) convertCosmos2Evm(
 			}
 		} else if owner == types.ModuleAddress {
 			// transfer
-			fmt.Printf("xxl come to normal safeTransferFrom \n")
 			_, err = k.CallEVM(
 				ctx, erc721, types.ModuleAddress, contract, true,
 				"safeTransferFrom", types.ModuleAddress, receiver, bigTokenIds[i])
