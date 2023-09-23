@@ -72,14 +72,17 @@ func (k Keeper) GetContractAddressAndTokenIds(ctx sdk.Context, msg *types.MsgCon
 	pair, err := k.GetPair(ctx, msg.ClassId)
 	if err != nil {
 
+		var codeId uint64
 		resultBytes := k.GetWasmCode(ctx, types.AccModuleAddress.String())
-		resultInt64, _ := strconv.ParseUint(string(resultBytes), 10, 64)
+		codeId, _ = strconv.ParseUint(string(resultBytes), 10, 64)
 
-		if resultInt64 <= 0 {
-			codeId, err := k.StoreWasmContract(ctx, "./cw721_base.wasm", types.AccModuleAddress.String())
+		if codeId <= 0 {
+
+			codeId, err = k.StoreWasmContract(ctx, "./cw721_base.wasm", types.AccModuleAddress.String())
 			if err != nil {
 				return "", nil, err
 			} else {
+
 				k.SetWasmCode(ctx, types.AccModuleAddress.String(), codeId)
 			}
 		}
@@ -87,7 +90,7 @@ func (k Keeper) GetContractAddressAndTokenIds(ctx sdk.Context, msg *types.MsgCon
 		contractAddress, err = k.InstantiateWasmContract(
 			ctx,
 			types.AccModuleAddress.String(),
-			resultInt64,
+			codeId,
 			UPTICK_CW721_LABLE,
 			UPTICK_CW721_NAME,
 			UPTICK_CW721_SYMBOL,
