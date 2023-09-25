@@ -1284,19 +1284,19 @@ func (app *Uptick) registerUpgradeHandlers() {
 		return
 	}
 
-	var storeUpgrades *storetypes.StoreUpgrades
-
-	//switch upgradeInfo.Name {
-	//case upgradeVersion:
-	//	// add revenue module for testnet (v7 -> v8)
-	//	storeUpgrades = &storetypes.StoreUpgrades{
-	//		Added: []string{cw721types.ModuleName},
-	//	}
+	//var storeUpgrades *storetypes.StoreUpgrades
+	//
+	////switch upgradeInfo.Name {
+	////case upgradeVersion:
+	////	// add revenue module for testnet (v7 -> v8)
+	////	storeUpgrades = &storetypes.StoreUpgrades{
+	////		Added: []string{cw721types.ModuleName},
+	////	}
+	////}
+	//
+	//if storeUpgrades != nil {
+	//
+	//	// configure store loader that checks if version == upgradeHeight and applies store upgrades
+	//	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	//}
-
-	if storeUpgrades != nil {
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
-	}
 }
