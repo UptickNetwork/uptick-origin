@@ -1253,7 +1253,7 @@ func initParamsKeeper(
 
 func (app *Uptick) registerUpgradeHandlers() {
 
-	upgradeVersion := "v0.2.10"
+	upgradeVersion := "v0.2.12"
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeVersion,
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -1286,13 +1286,13 @@ func (app *Uptick) registerUpgradeHandlers() {
 
 	var storeUpgrades *storetypes.StoreUpgrades
 
-	switch upgradeInfo.Name {
-	case upgradeVersion:
-		// add revenue module for testnet (v7 -> v8)
-		storeUpgrades = &storetypes.StoreUpgrades{
-			Added: []string{cw721types.ModuleName},
-		}
-	}
+	//switch upgradeInfo.Name {
+	//case upgradeVersion:
+	//	// add revenue module for testnet (v7 -> v8)
+	//	storeUpgrades = &storetypes.StoreUpgrades{
+	//		Added: []string{cw721types.ModuleName},
+	//	}
+	//}
 
 	if storeUpgrades != nil {
 
