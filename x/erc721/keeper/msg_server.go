@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/UptickNetwork/uptick/x/collection/exported"
 	"math/big"
 	"strings"
+
+	"github.com/UptickNetwork/uptick/x/collection/exported"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -158,6 +159,7 @@ func (k Keeper) convertCosmos2Evm(
 
 	erc721 := contracts.ERC721UpticksContract.ABI
 	contract := pair.GetERC721Contract()
+	msg.ContractAddress = contract.String()
 
 	for i, tokenId := range msg.TokenIds {
 		bigTokenId := new(big.Int)
@@ -224,6 +226,7 @@ func (k Keeper) convertCosmos2Evm(
 	}
 
 	for i, tokenId := range msg.TokenIds {
+
 		k.SetNFTPairs(ctx, msg.ContractAddress, tokenId, msg.ClassId, msg.NftIds[i])
 	}
 

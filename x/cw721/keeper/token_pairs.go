@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -187,6 +188,7 @@ func (k Keeper) SetNFTPairByClassNFTID(ctx sdk.Context, classID string, nftID st
 }
 
 func (k Keeper) SetNFTUIDPairByNFTUID(ctx sdk.Context, nftUID string, tokenUID string) {
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNFTUIDPairByNFTUID)
 	store.Set([]byte(nftUID), []byte(tokenUID))
 }
@@ -197,6 +199,7 @@ func (k Keeper) GetNFTPairByClassNFTID(ctx sdk.Context, classID string, nftID st
 }
 
 func (k Keeper) GetTokenUIDPairByNFTUID(ctx sdk.Context, nftUID string) []byte {
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNFTUIDPairByNFTUID)
 	return store.Get([]byte(nftUID))
 }

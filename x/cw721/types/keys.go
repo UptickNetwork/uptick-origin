@@ -34,7 +34,7 @@ func init() {
 
 // prefix bytes for the EVM persistent store
 const (
-	prefixTokenPair = iota + 1
+	prefixTokenPair = iota + 100
 	prefixTokenPairByCW721
 	prefixTokenPairByClass
 
