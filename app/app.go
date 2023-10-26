@@ -1253,7 +1253,7 @@ func initParamsKeeper(
 
 func (app *Uptick) registerUpgradeHandlers() {
 
-	upgradeVersion := "v0.2.12"
+	upgradeVersion := "v0.2.13"
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeVersion,
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
