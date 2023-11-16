@@ -4,10 +4,10 @@ go 1.18
 
 require (
 	github.com/CosmWasm/wasmd v0.28.0
-	github.com/bianjieai/nft-transfer v1.1.2-beta
+	github.com/bianjieai/nft-transfer v1.1.3-ibc-v5.3.2
 	github.com/cosmos/cosmos-sdk v0.46.13
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go/v5 v5.2.0
+	github.com/cosmos/ibc-go/v5 v5.3.2
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.20.0
 	github.com/gogo/protobuf v1.3.3

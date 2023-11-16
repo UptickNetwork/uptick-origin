@@ -667,7 +667,7 @@ func NewUptick(
 	app.IBCNFTTransferKeeper = ibcnfttransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibcnfttransfertypes.StoreKey],
-		app.GetSubspace(ibctransfertypes.ModuleName),
+		ibctransfertypes.ModuleName,
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
