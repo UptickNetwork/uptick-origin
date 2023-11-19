@@ -12,6 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	// ibcnfttransfertypes "github.com/bianjieai/nft-transfer/types"
+	ibcnfttransferkeeper "github.com/bianjieai/nft-transfer/keeper"
+
 	"github.com/UptickNetwork/uptick/x/erc721/types"
 )
 
@@ -25,6 +28,7 @@ type Keeper struct {
 	nftKeeper     nftkeeper.Keeper
 	evmKeeper     types.EVMKeeper
 	ics4Wrapper   porttypes.ICS4Wrapper
+	ibcKeeper     ibcnfttransferkeeper.Keeper
 }
 
 // NewKeeper creates new instances of the erc721 Keeper
@@ -33,7 +37,9 @@ func NewKeeper(storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	ak types.AccountKeeper,
 	nk nftkeeper.Keeper,
-	ek types.EVMKeeper) Keeper {
+	ek types.EVMKeeper,
+	ik ibcnfttransferkeeper.Keeper,
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
@@ -46,6 +52,7 @@ func NewKeeper(storeKey storetypes.StoreKey,
 		accountKeeper: ak,
 		nftKeeper:     nk,
 		evmKeeper:     ek,
+		ibcKeeper:     ik,
 	}
 }
 

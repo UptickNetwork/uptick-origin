@@ -351,6 +351,9 @@ type Uptick struct {
 
 	NFTKeeper nftkeeper.Keeper
 
+	//Add ICS721 for nft ibc transfer
+	// ICS721Keeper ibcnfttransferkeeper.Keeper
+
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 	wasmKeeper             wasm.Keeper
 	wasmPermissionedKeeper wasmkeeper.PermissionedKeeper
@@ -596,15 +599,6 @@ func NewUptick(
 		app.AccountKeeper,
 		app.BankKeeper)
 
-	app.Erc721Keeper = erc721keeper.NewKeeper(
-		keys[erc721types.StoreKey],
-		appCodec,
-		app.GetSubspace(erc721types.ModuleName),
-		app.AccountKeeper,
-		app.NFTKeeper,
-		app.EvmKeeper,
-	)
-
 	// register the proposal types
 	// govRouter := govtypes.NewRouter()
 	govRouter := govv1beta1.NewRouter()
@@ -661,7 +655,6 @@ func NewUptick(
 
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
-	// create IBC module from bottom to top of stack
 	transferStack := erc20.NewIBCMiddleware(*app.Erc20Keeper, transferIBCModule)
 
 	app.IBCNFTTransferKeeper = ibcnfttransferkeeper.NewKeeper(
@@ -675,8 +668,16 @@ func NewUptick(
 		internft.NewInterNftKeeper(appCodec, app.NFTKeeper, app.AccountKeeper),
 		scopedNFTTransferKeeper,
 	)
-	ibcnfttransferModule := nfttransfer.NewAppModule(app.IBCNFTTransferKeeper)
-	nfttransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
+
+	app.Erc721Keeper = erc721keeper.NewKeeper(
+		keys[erc721types.StoreKey],
+		appCodec,
+		app.GetSubspace(erc721types.ModuleName),
+		app.AccountKeeper,
+		app.NFTKeeper,
+		app.EvmKeeper,
+		app.IBCNFTTransferKeeper,
+	)
 
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
@@ -733,12 +734,16 @@ func NewUptick(
 		&app.wasmPermissionedKeeper,
 	)
 
+	ibcnfttransferModule := nfttransfer.NewAppModule(app.IBCNFTTransferKeeper)
+	nfttransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
+	nftTansferStack := erc721.NewIBCMiddleware(app.Erc721Keeper, nfttransferIBCModule)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.wasmKeeper, app.IBCKeeper.ChannelKeeper)).
-		AddRoute(ibcnfttransfertypes.ModuleName, nfttransferIBCModule).
+		AddRoute(ibcnfttransfertypes.ModuleName, nftTansferStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)

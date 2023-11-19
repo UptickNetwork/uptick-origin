@@ -40,6 +40,8 @@ const (
 
 	prefixNFTUIDPairByNFTUID
 	prefixNFTUIDPairByTokenUID
+
+	prefixEvmAddressByContractTokenId
 )
 
 // KVStore key prefixes
@@ -47,9 +49,9 @@ var (
 	KeyPrefixTokenPair         = []byte{prefixTokenPair}
 	KeyPrefixTokenPairByERC721 = []byte{prefixTokenPairByERC721}
 	KeyPrefixTokenPairByClass  = []byte{prefixTokenPairByClass}
-	//KeyPrefixNFTPairByNFTID    = []byte{prefixNFTPairByNFTID}
-	//KeyPrefixNFTPairByTokenID  = []byte{prefixNFTPairByTokenID}
 
 	KeyPrefixNFTUIDPairByNFTUID   = []byte{prefixNFTUIDPairByNFTUID}
 	KeyPrefixNFTUIDPairByTokenUID = []byte{prefixNFTUIDPairByTokenUID}
+
+	KeyPrefixEvmAddressByContractTokenId = []byte{prefixEvmAddressByContractTokenId}
 )
