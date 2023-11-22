@@ -1,8 +1,8 @@
 package erc20
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/UptickNetwork/uptick/ibc"
 	"github.com/UptickNetwork/uptick/x/erc20/keeper"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 )
 
 var _ porttypes.Middleware = &IBCMiddleware{}
@@ -37,7 +38,6 @@ func (im IBCMiddleware) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 
-	fmt.Printf("###xxl 20 IBCMiddleware OnRecvPacket ")
 	ack := im.Module.OnRecvPacket(ctx, packet, relayer)
 
 	// return if the acknowledgement is an error ACK
@@ -48,22 +48,22 @@ func (im IBCMiddleware) OnRecvPacket(
 	return im.keeper.OnRecvPacket(ctx, packet, ack)
 }
 
-// OnAcknowledgementPacket implements the IBCModule interface
-// If fees are not enabled, this callback will default to the ibc-core packet callback.
-func (im IBCMiddleware) OnAcknowledgementPacket(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-	acknowledgement []byte,
-	relayer sdk.AccAddress,
-) error {
-
-	fmt.Printf("###xxl 20 IBCMiddleware OnAcknowledgementPacket ")
-	if err := im.Module.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer); err != nil {
-		return err
-	}
-
-	return im.keeper.OnAcknowledgementPacket(ctx, packet, acknowledgement)
-}
+//// OnAcknowledgementPacket implements the IBCModule interface
+//// If fees are not enabled, this callback will default to the ibc-core packet callback.
+//func (im IBCMiddleware) OnAcknowledgementPacket(
+//	ctx sdk.Context,
+//	packet channeltypes.Packet,
+//	acknowledgement []byte,
+//	relayer sdk.AccAddress,
+//) error {
+//
+//	fmt.Printf("###xxl 20 IBCMiddleware OnAcknowledgementPacket ")
+//	if err := im.Module.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer); err != nil {
+//		return err
+//	}
+//
+//	return im.keeper.OnAcknowledgementPacket(ctx, packet, acknowledgement)
+//}
 
 // SendPacket implements the ICS4 Wrapper interface
 func (im IBCMiddleware) SendPacket(
@@ -81,7 +81,6 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	fmt.Printf("###xxl 20 IBCMiddleware WriteAcknowledgement ")
 	return im.keeper.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
@@ -91,4 +90,37 @@ func (im IBCMiddleware) GetAppVersion(
 	channelID string,
 ) (string, bool) {
 	return im.keeper.GetAppVersion(ctx, portID, channelID)
+}
+
+// OnAcknowledgementPacket implements the IBCModule interface
+// If fees are not enabled, this callback will default to the ibc-core packet callback.
+func (im IBCMiddleware) OnAcknowledgementPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+	relayer sdk.AccAddress,
+) error {
+
+	// decode the data
+	var ack channeltypes.Acknowledgement
+	if err := transfertypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest,
+			"cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+	}
+
+	var data transfertypes.FungibleTokenPacketData
+	if err := transfertypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest,
+			"cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+
+	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, data, ack); err != nil {
+		return err
+	}
+
+	if err := im.Module.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -30,10 +30,6 @@ func (k Keeper) TransferERC721(
 	*types.MsgTransferERC721Response, error,
 ) {
 
-	fmt.Printf("###xxl msg.EvmSender %v\n", msg.EvmSender)
-	cosmosAddress := common.HexToAddress(msg.EvmSender)
-	fmt.Printf("###xxl cosmosAddress %v\n", cosmosAddress)
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	convertMsg := types.MsgConvertERC721{
 		EvmContractAddress: msg.EvmContractAddress,
@@ -54,10 +50,9 @@ func (k Keeper) TransferERC721(
 		Receiver:         msg.CosmosReceiver,
 		TimeoutHeight:    msg.TimeoutHeight,
 		TimeoutTimestamp: msg.TimeoutTimestamp,
-		Memo:             msg.Memo,
+		Memo:             msg.Memo + types.TransferERC721Memo,
 	}
 
-	fmt.Printf("###xxl ibcMsg %v\n", ibcMsg)
 	k.ibcKeeper.Transfer(goCtx, &ibcMsg)
 
 	for _, evmTokenId := range msg.CosmosTokenIds {
@@ -392,11 +387,11 @@ func (k Keeper) convertEvm2Cosmos(
 	return &types.MsgConvertERC721Response{}, nil
 }
 
-// refundPacketToken handles the erc721 conversion for a native erc721 token
+// RefundPacketToken handles the erc721 conversion for a native erc721 token
 // pair:
 //   - escrow tokens on module account
 //   - mint nft to the receiver: nftId: tokenAddress|tokenID
-func (k Keeper) refundPacketToken(
+func (k Keeper) RefundPacketToken(
 	ctx sdk.Context,
 	data ibcnfttransfertypes.NonFungibleTokenPacketData,
 ) error {
@@ -415,7 +410,6 @@ func (k Keeper) refundPacketToken(
 		}
 
 		evmReceiver := k.GetEvmAddressByContractTokenId(ctx, evmContractAddress, tokenId)
-		fmt.Printf("###xxl 03 refundPacketToken %v - %v\n", string(evmReceiver), tokenId)
 		_, err = k.CallEVM(
 			ctx, erc721, types.ModuleAddress, common.HexToAddress(evmContractAddress), true,
 			"safeTransferFrom", types.ModuleAddress, common.HexToAddress(string(evmReceiver)), bigTokenId)

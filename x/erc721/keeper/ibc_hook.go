@@ -1,10 +1,13 @@
 package keeper
 
 import (
-	"fmt"
 	"github.com/bianjieai/nft-transfer/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"strings"
+
+	cwTypes "github.com/UptickNetwork/uptick/x/cw721/types"
+	ercTypes "github.com/UptickNetwork/uptick/x/erc721/types"
 )
 
 // OnRecvPacket processes a cross chain fungible token transfer. If the
@@ -26,12 +29,14 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
-		k.refundPacketToken(ctx, data)
-		fmt.Printf("###xxl OnAcknowledgementPacket 02 error  \n")
+		if strings.Contains(data.Memo, ercTypes.TransferERC721Memo) {
+			k.RefundPacketToken(ctx, data)
+		} else if strings.Contains(data.Memo, cwTypes.TransferCW721Memo) {
+			k.cw721Keep.RefundPacketToken(ctx, data)
+		}
 	default:
 		// the acknowledgement succeeded on the receiving chain so nothing
 		// needs to be executed and no error needs to be returned
-		fmt.Printf("###xxl OnAcknowledgementPacket 03 normal")
 	}
 	return nil
 }
@@ -40,7 +45,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 // never received and has been timed out.
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.NonFungibleTokenPacketData) error {
 
-	fmt.Printf("### xxl app OnAcknowledgementPacket 02 ")
-	k.refundPacketToken(ctx, data)
+	if strings.Contains(data.Memo, ercTypes.TransferERC721Memo) {
+		k.RefundPacketToken(ctx, data)
+	} else if strings.Contains(data.Memo, cwTypes.TransferCW721Memo) {
+		k.cw721Keep.RefundPacketToken(ctx, data)
+	}
 	return nil
 }

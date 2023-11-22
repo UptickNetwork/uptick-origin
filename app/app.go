@@ -446,6 +446,7 @@ func NewUptick(
 
 	// init params keeper and subspaces
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
 
@@ -652,6 +653,7 @@ func NewUptick(
 		scopedTransferKeeper,
 	)
 	app.Erc20Keeper.SetICS4Wrapper(app.IBCKeeper.ChannelKeeper)
+	app.Erc20Keeper.SetIBCKeeper(app.TransferKeeper)
 
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
@@ -732,18 +734,23 @@ func NewUptick(
 		app.NFTKeeper,
 		app.wasmKeeper,
 		&app.wasmPermissionedKeeper,
+		app.IBCNFTTransferKeeper,
 	)
 
+	app.Erc721Keeper.SetCw721Keeper(app.Cw721Keeper)
+
 	ibcnfttransferModule := nfttransfer.NewAppModule(app.IBCNFTTransferKeeper)
-	nfttransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
-	nftTansferStack := erc721.NewIBCMiddleware(app.Erc721Keeper, nfttransferIBCModule)
+	nftTransferIBCModule := nfttransfer.NewIBCModule(app.IBCNFTTransferKeeper)
+	ercTransferStack := erc721.NewIBCMiddleware(app.Erc721Keeper, nftTransferIBCModule)
+	// cwTransferStack := cw721.NewIBCMiddleware(app.Cw721Keeper, ercTransferStack)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.wasmKeeper, app.IBCKeeper.ChannelKeeper)).
-		AddRoute(ibcnfttransfertypes.ModuleName, nftTansferStack).
+		AddRoute(ibcnfttransfertypes.ModuleName, ercTransferStack).
+		// AddRoute(ibcnfttransfertypes.ModuleName, cwTransferStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -1258,7 +1265,7 @@ func initParamsKeeper(
 
 func (app *Uptick) registerUpgradeHandlers() {
 
-	upgradeVersion := "v0.2.13"
+	upgradeVersion := "v0.2.14"
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgradeVersion,
 		func(ctx sdk.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {

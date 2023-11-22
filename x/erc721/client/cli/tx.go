@@ -33,7 +33,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewConvertNFTCmd(),
 		NewConvertERC721Cmd(),
-		TransferERC721Cmd(),
+		NewTransferERC721Cmd(),
 	)
 	return txCmd
 }
@@ -160,8 +160,8 @@ const (
 	flagAbsoluteTimeouts       = "absolute-timeouts"
 )
 
-// TransferERC721Cmd returns a CLI command handler for converting an erc721
-func TransferERC721Cmd() *cobra.Command {
+// NewTransferERC721Cmd returns a CLI command handler for converting an erc721
+func NewTransferERC721Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "ibc-transfer-erc721 [evm_contract_address] [evm_token_ids] [src_port] [src_channel] [cosmos_receiver] [class_id] [cosmos_token_ids]",
 		Short: "Convert an erc721 token to Cosmos coin and transfer a non-fungible token through IBC " +
@@ -173,9 +173,8 @@ func TransferERC721Cmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("###xxl cliCtx.GetFromAddress() %v\n", cliCtx.GetFromAddress())
+
 			evmSender := common.BytesToAddress(cliCtx.GetFromAddress().Bytes())
-			fmt.Printf("###xxl evmSender.Hex() %v\n", evmSender.Hex())
 
 			evmContractAddress := args[0]
 			if err := ethermint.ValidateAddress(evmContractAddress); err != nil {

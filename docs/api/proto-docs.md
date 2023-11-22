@@ -69,10 +69,13 @@
     - [Query](#uptick.cw721.v1.Query)
   
 - [uptick/cw721/v1/tx.proto](#uptick/cw721/v1/tx.proto)
+    - [MsgConvertC721Response](#uptick.cw721.v1.MsgConvertC721Response)
     - [MsgConvertCW721](#uptick.cw721.v1.MsgConvertCW721)
     - [MsgConvertCW721Response](#uptick.cw721.v1.MsgConvertCW721Response)
     - [MsgConvertNFT](#uptick.cw721.v1.MsgConvertNFT)
     - [MsgConvertNFTResponse](#uptick.cw721.v1.MsgConvertNFTResponse)
+    - [MsgTransferCW721](#uptick.cw721.v1.MsgTransferCW721)
+    - [MsgTransferCW721Response](#uptick.cw721.v1.MsgTransferCW721Response)
   
     - [Msg](#uptick.cw721.v1.Msg)
   
@@ -104,6 +107,8 @@
     - [MsgConvertCoinResponse](#uptick.erc20.v1.MsgConvertCoinResponse)
     - [MsgConvertERC20](#uptick.erc20.v1.MsgConvertERC20)
     - [MsgConvertERC20Response](#uptick.erc20.v1.MsgConvertERC20Response)
+    - [MsgTransferERC20](#uptick.erc20.v1.MsgTransferERC20)
+    - [MsgTransferERC20Response](#uptick.erc20.v1.MsgTransferERC20Response)
   
     - [Msg](#uptick.erc20.v1.Msg)
   
@@ -1025,6 +1030,16 @@ Query defines the gRPC querier service.
 
 
 
+<a name="uptick.cw721.v1.MsgConvertC721Response"></a>
+
+### MsgConvertC721Response
+MsgConvertCW721Response returns no fields
+
+
+
+
+
+
 <a name="uptick.cw721.v1.MsgConvertCW721"></a>
 
 ### MsgConvertCW721
@@ -1085,6 +1100,41 @@ MsgConvertNFTResponse returns no fields
 
 
 
+
+<a name="uptick.cw721.v1.MsgTransferCW721"></a>
+
+### MsgTransferCW721
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `cw_contract_address` | [string](#string) |  |  |
+| `cw_token_ids` | [string](#string) | repeated | tokenID to convert |
+| `source_port` | [string](#string) |  | the port on which the packet will be sent |
+| `source_channel` | [string](#string) |  | the channel by which the packet will be sent |
+| `class_id` | [string](#string) |  | the class_id of tokens to be transferred |
+| `cosmos_token_ids` | [string](#string) | repeated | the non fungible tokens to be transferred |
+| `cw_sender` | [string](#string) |  | the sender address |
+| `cosmos_receiver` | [string](#string) |  | the recipient address on the destination chain |
+| `timeout_height` | [ibc.core.client.v1.Height](#ibc.core.client.v1.Height) |  | Timeout height relative to the current block height. The timeout is disabled when set to 0. |
+| `timeout_timestamp` | [uint64](#uint64) |  | Timeout timestamp in absolute nanoseconds since unix epoch. The timeout is disabled when set to 0. |
+| `memo` | [string](#string) |  | optional memo |
+
+
+
+
+
+
+<a name="uptick.cw721.v1.MsgTransferCW721Response"></a>
+
+### MsgTransferCW721Response
+
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1101,6 +1151,7 @@ Msg defines the cw721 Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ConvertNFT` | [MsgConvertNFT](#uptick.cw721.v1.MsgConvertNFT) | [MsgConvertNFTResponse](#uptick.cw721.v1.MsgConvertNFTResponse) | ConvertNFT mints a CW721 representation of the native Cosmos nft that is registered on the token mapping. | GET|/uptick/cw721/v1/tx/convert_nft|
 | `ConvertCW721` | [MsgConvertCW721](#uptick.cw721.v1.MsgConvertCW721) | [MsgConvertCW721Response](#uptick.cw721.v1.MsgConvertCW721Response) | ConvertCW721 mints a native Cosmos coin representation of the CW721 token contract that is registered on the token mapping. | GET|/uptick/cw721/v1/tx/convert_cw721|
+| `TransferCW721` | [MsgTransferCW721](#uptick.cw721.v1.MsgTransferCW721) | [MsgTransferCW721Response](#uptick.cw721.v1.MsgTransferCW721Response) |  | GET|/uptick/cw721/v1/tx/ibc-transfer-cw721|
 
  <!-- end services -->
 
@@ -1452,6 +1503,39 @@ MsgConvertERC20Response returns no fields
 
 
 
+
+<a name="uptick.erc20.v1.MsgTransferERC20"></a>
+
+### MsgTransferERC20
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `evm_contract_address` | [string](#string) |  |  |
+| `amount` | [string](#string) |  | tokenID to convert |
+| `source_port` | [string](#string) |  | the port on which the packet will be sent |
+| `source_channel` | [string](#string) |  | the channel by which the packet will be sent |
+| `evm_sender` | [string](#string) |  | the sender address |
+| `cosmos_receiver` | [string](#string) |  | the recipient address on the destination chain |
+| `timeout_height` | [ibc.core.client.v1.Height](#ibc.core.client.v1.Height) |  | Timeout height relative to the current block height. The timeout is disabled when set to 0. |
+| `timeout_timestamp` | [uint64](#uint64) |  | Timeout timestamp in absolute nanoseconds since unix epoch. The timeout is disabled when set to 0. |
+| `memo` | [string](#string) |  | optional memo |
+
+
+
+
+
+
+<a name="uptick.erc20.v1.MsgTransferERC20Response"></a>
+
+### MsgTransferERC20Response
+
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1468,6 +1552,7 @@ Msg defines the erc20 Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ConvertCoin` | [MsgConvertCoin](#uptick.erc20.v1.MsgConvertCoin) | [MsgConvertCoinResponse](#uptick.erc20.v1.MsgConvertCoinResponse) | ConvertCoin mints a ERC20 representation of the SDK Coin denom that is registered on the token mapping. | GET|/uptick/erc20/v1/tx/convert_coin|
 | `ConvertERC20` | [MsgConvertERC20](#uptick.erc20.v1.MsgConvertERC20) | [MsgConvertERC20Response](#uptick.erc20.v1.MsgConvertERC20Response) | ConvertERC20 mints a Cosmos coin representation of the ERC20 token contract that is registered on the token mapping. | GET|/uptick/erc20/v1/tx/convert_erc20|
+| `TransferERC20` | [MsgTransferERC20](#uptick.erc20.v1.MsgTransferERC20) | [MsgTransferERC20Response](#uptick.erc20.v1.MsgTransferERC20Response) |  | GET|/uptick/erc20/v1/tx/ibc-transfer-erc20|
 
  <!-- end services -->
 

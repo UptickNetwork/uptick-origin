@@ -1,7 +1,6 @@
 package erc721
 
 import (
-	"fmt"
 	"github.com/bianjieai/nft-transfer/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,7 +39,6 @@ func (im IBCMiddleware) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
 
-	fmt.Printf("###xxl 721 IBCMiddleware OnRecvPacket \n")
 	ack := im.Module.OnRecvPacket(ctx, packet, relayer)
 
 	// return if the acknowledgement is an error ACK
@@ -77,10 +75,7 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 		return err
 	}
 
-	fmt.Printf("###xxl 721 IBCMiddleware OnAcknowledgementPacket \n")
 	if err := im.Module.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer); err != nil {
-
-		fmt.Printf("###xxl 721 IBCMiddleware OnAcknowledgementPacket %v \n", err)
 		return err
 	}
 
@@ -103,7 +98,6 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	fmt.Printf("###xxl 721 IBCMiddleware WriteAcknowledgement \n")
 	return nil
 }
 

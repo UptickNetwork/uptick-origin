@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	nftTypes "github.com/UptickNetwork/uptick/x/collection/types"
+	ibcnfttransfertypes "github.com/bianjieai/nft-transfer/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
@@ -11,6 +12,47 @@ import (
 )
 
 var _ types.MsgServer = &Keeper{}
+
+// TransferCW721 converts CW721 tokens into native Cosmos nft for both
+// Cosmos-native and CW721 TokenPair Owners and transfer through IBC
+func (k Keeper) TransferCW721(
+	goCtx context.Context,
+	msg *types.MsgTransferCW721,
+) (
+	*types.MsgTransferCW721Response, error,
+) {
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	convertMsg := types.MsgConvertCW721{
+		ContractAddress: msg.CwContractAddress,
+		TokenIds:        msg.CwTokenIds,
+		Receiver:        types.AccModuleAddress.String(),
+		Sender:          msg.CwSender,
+		ClassId:         msg.ClassId,
+		NftIds:          msg.CosmosTokenIds,
+	}
+	k.ConvertCW721(ctx, &convertMsg)
+
+	ibcMsg := ibcnfttransfertypes.MsgTransfer{
+		SourcePort:       msg.SourcePort,
+		SourceChannel:    msg.SourceChannel,
+		ClassId:          msg.ClassId,
+		TokenIds:         msg.CosmosTokenIds,
+		Sender:           types.AccModuleAddress.String(),
+		Receiver:         msg.CosmosReceiver,
+		TimeoutHeight:    msg.TimeoutHeight,
+		TimeoutTimestamp: msg.TimeoutTimestamp,
+		Memo:             msg.Memo + types.TransferCW721Memo,
+	}
+
+	k.ibcKeeper.Transfer(goCtx, &ibcMsg)
+	for _, cwTokenId := range msg.CosmosTokenIds {
+		k.SetCwAddressByContractTokenId(ctx, msg.CwContractAddress, cwTokenId, msg.CwSender)
+	}
+
+	return &types.MsgTransferCW721Response{}, nil
+
+}
 
 // ConvertCW721 converts CW721 tokens into native Cosmos nft for both
 // Cosmos-native and CW721 TokenPair Owners
@@ -243,4 +285,29 @@ func (k Keeper) convertCosmos2Wasm(
 		},
 	)
 	return &types.MsgConvertNFTResponse{}, nil
+}
+
+// RefundPacketToken handles the erc721 conversion for a native erc721 token
+// pair:
+//   - escrow tokens on module account
+//   - mint nft to the receiver: nftId: tokenAddress|tokenID
+func (k Keeper) RefundPacketToken(
+	ctx sdk.Context,
+	data ibcnfttransfertypes.NonFungibleTokenPacketData,
+) error {
+
+	for _, tokenId := range data.TokenIds {
+
+		uNftID := types.CreateNFTUID(data.ClassId, tokenId)
+		cwTokenId, cwContractAddress := types.GetNFTFromUID(string(k.GetTokenUIDPairByNFTUID(ctx, uNftID)))
+		cwReceiver := k.GetCwAddressByContractTokenId(ctx, cwContractAddress, tokenId)
+
+		_, err := k.TransferCw721(ctx, cwContractAddress, cwTokenId, string(cwReceiver), data.Sender)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

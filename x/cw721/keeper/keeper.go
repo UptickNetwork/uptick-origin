@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	nftkeeper "github.com/UptickNetwork/uptick/x/collection/keeper"
+	ibcnfttransferkeeper "github.com/bianjieai/nft-transfer/keeper"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -28,6 +29,7 @@ type Keeper struct {
 	cwKeeper             wasmkeeper.Keeper
 	cwPermissionedKeeper *wasmkeeper.PermissionedKeeper
 	ics4Wrapper          porttypes.ICS4Wrapper
+	ibcKeeper            ibcnfttransferkeeper.Keeper
 }
 
 // NewKeeper creates new instances of the cw721 Keeper
@@ -37,7 +39,8 @@ func NewKeeper(storeKey storetypes.StoreKey,
 	ak types.AccountKeeper,
 	nk nftkeeper.Keeper,
 	ek wasmkeeper.Keeper,
-	pk *wasmkeeper.PermissionedKeeper) Keeper {
+	pk *wasmkeeper.PermissionedKeeper,
+	ik ibcnfttransferkeeper.Keeper) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
@@ -51,6 +54,7 @@ func NewKeeper(storeKey storetypes.StoreKey,
 		nftKeeper:            nk,
 		cwKeeper:             ek,
 		cwPermissionedKeeper: pk,
+		ibcKeeper:            ik,
 	}
 }
 

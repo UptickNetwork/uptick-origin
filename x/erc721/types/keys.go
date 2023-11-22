@@ -20,7 +20,8 @@ const (
 	StoreKey = ModuleName
 
 	// RouterKey to be used for message routing
-	RouterKey = ModuleName
+	RouterKey          = ModuleName
+	TransferERC721Memo = ":IBCTransferFromERC721"
 )
 
 // ModuleAddress is the native module address for EVM

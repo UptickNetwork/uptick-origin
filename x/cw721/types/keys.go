@@ -20,7 +20,8 @@ const (
 	StoreKey = ModuleName
 
 	// RouterKey to be used for message routing
-	RouterKey = ModuleName
+	RouterKey         = ModuleName
+	TransferCW721Memo = ":IBCTransferFromCW721"
 )
 
 // ModuleAddress is the native module address for EVM
@@ -42,6 +43,7 @@ const (
 	prefixNFTUIDPairByTokenUID
 
 	prefixWasmCode
+	prefixCwAddressByContractTokenId
 )
 
 // KVStore key prefixes
@@ -53,5 +55,6 @@ var (
 	KeyPrefixNFTUIDPairByNFTUID   = []byte{prefixNFTUIDPairByNFTUID}
 	KeyPrefixNFTUIDPairByTokenUID = []byte{prefixNFTUIDPairByTokenUID}
 
-	KeyPrefixWasmCode = []byte{prefixWasmCode}
+	KeyPrefixWasmCode                   = []byte{prefixWasmCode}
+	KeyPrefixCwAddressByContractTokenId = []byte{prefixCwAddressByContractTokenId}
 )

@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	// ibcnfttransfertypes "github.com/bianjieai/nft-transfer/types"
+	"github.com/UptickNetwork/uptick/x/erc721/types"
 	ibcnfttransferkeeper "github.com/bianjieai/nft-transfer/keeper"
 
-	"github.com/UptickNetwork/uptick/x/erc721/types"
+	cw721keep "github.com/UptickNetwork/uptick/x/cw721/keeper"
 )
 
 // Keeper of this module maintains collections of erc721.
@@ -29,6 +29,7 @@ type Keeper struct {
 	evmKeeper     types.EVMKeeper
 	ics4Wrapper   porttypes.ICS4Wrapper
 	ibcKeeper     ibcnfttransferkeeper.Keeper
+	cw721Keep     cw721keep.Keeper
 }
 
 // NewKeeper creates new instances of the erc721 Keeper
@@ -69,4 +70,11 @@ func (k *Keeper) SetICS4Wrapper(ics4Wrapper porttypes.ICS4Wrapper) {
 	}
 
 	k.ics4Wrapper = ics4Wrapper
+}
+
+// SetCw721Keeper sets the ICS4 wrapper to the keeper.
+// It panics if already set
+func (k *Keeper) SetCw721Keeper(cw721keeper cw721keep.Keeper) {
+
+	k.cw721Keep = cw721keeper
 }

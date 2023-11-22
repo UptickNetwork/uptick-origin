@@ -209,10 +209,9 @@ require (
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.25.1-0.20220801160312-3a00b3e1846c
-
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
-	// github.com/cosmos/cosmos-sdk => github.com/evmos/cosmos-sdk v0.46.13-alpha.ledger.8
+	github.com/cosmos/ibc-go/v5 => github.com/uptSmart/ibc-go/v5 v5.3.2-erc20
 
 	github.com/evmos/ethermint => github.com/bianjieai/ethermint v0.20.0-irishub-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
