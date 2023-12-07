@@ -30,6 +30,7 @@ func (k Keeper) TransferERC721(
 	*types.MsgTransferERC721Response, error,
 ) {
 
+	fmt.Printf("xxl: ---- 1 %v \n", msg)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	convertMsg := types.MsgConvertERC721{
 		EvmContractAddress: msg.EvmContractAddress,
@@ -52,8 +53,12 @@ func (k Keeper) TransferERC721(
 		TimeoutTimestamp: msg.TimeoutTimestamp,
 		Memo:             msg.Memo + types.TransferERC721Memo,
 	}
+	fmt.Printf("xxl: ---- 2 %v \n", ibcMsg)
 
-	k.ibcKeeper.Transfer(goCtx, &ibcMsg)
+	_, err := k.ibcKeeper.Transfer(goCtx, &ibcMsg)
+	if err != nil {
+		fmt.Printf("xxl: ---- 3 %v \n", err)
+	}
 
 	for _, evmTokenId := range msg.CosmosTokenIds {
 		k.SetEvmAddressByContractTokenId(ctx, msg.EvmContractAddress, evmTokenId, msg.EvmSender)

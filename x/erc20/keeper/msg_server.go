@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"math/big"
@@ -32,8 +33,11 @@ func (k Keeper) TransferERC20(
 	*types.MsgTransferERC20Response, error,
 ) {
 
+	fmt.Printf("xxl: 01---- %v \n", msg)
 	cosmosSender, err := appType.ConvertAddressEvm2Cosmos(msg.EvmSender)
 	if err != nil {
+
+		fmt.Printf("xxl: 02---- %v \n", err)
 		return nil, err
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -48,6 +52,8 @@ func (k Keeper) TransferERC20(
 
 	receiver, err := sdk.AccAddressFromBech32(cosmosSender)
 	if err != nil {
+
+		fmt.Printf("xxl: 03---- %v \n", err)
 		return nil, err
 	}
 	sender := common.HexToAddress(msg.EvmSender)
@@ -67,7 +73,11 @@ func (k Keeper) TransferERC20(
 		TimeoutTimestamp: msg.TimeoutTimestamp,
 		Memo:             msg.Memo + types.TransferERC20Memo,
 	}
-	k.ibcKeeper.Transfer(goCtx, &ibcMsg)
+	_, err = k.ibcKeeper.Transfer(goCtx, &ibcMsg)
+	if err != nil {
+		fmt.Printf("xxl:---- 04 %v\n", err)
+		return nil, err
+	}
 
 	return &types.MsgTransferERC20Response{}, nil
 

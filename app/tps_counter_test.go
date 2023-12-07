@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"io"
 	"regexp"
 	"strings"
@@ -90,17 +89,23 @@ func TestTAddress(t *testing.T) {
 	//encodedString := hex.EncodeToString(rawBytes)
 	//fmt.Println("Encoded Hex String1: ", encodedString)
 
-	rawBytes2, err2 := hex.DecodeString("0x9c56F171C0aF2beB66a706e214DE45D26Bc95e1e"[2:])
-	if err2 != nil {
-		fmt.Printf("error %v\n", err2)
-	}
-	fmt.Println("Encoded Hex String2: ", rawBytes2)
+	//rawBytes2, err2 := hex.DecodeString("0x9c56F171C0aF2beB66a706e214DE45D26Bc95e1e"[2:])
+	//if err2 != nil {
+	//	fmt.Printf("error %v\n", err2)
+	//}
+	//fmt.Println("Encoded Hex String2: ", rawBytes2)
+	//
+	//// evm -> cosmos
+	//strAddress, err3 := sdk.Bech32ifyAddressBytes("uptick", rawBytes2)
+	//if err3 != nil {
+	//	fmt.Printf("error %v\n", err3)
+	//}
+	//fmt.Println("Encoded Hex String3: ", strAddress)
+	//
 
-	// evm -> cosmos
-	strAddress, err3 := sdk.Bech32ifyAddressBytes("uptick", rawBytes2)
-	if err3 != nil {
-		fmt.Printf("error %v\n", err3)
-	}
-	fmt.Println("Encoded Hex String3: ", strAddress)
+	// var test [32]byte
+	byteArray := []byte{209, 100, 252, 60, 37, 120, 9, 212, 159, 213, 157, 170, 117, 182, 27, 24, 41, 132, 9, 108, 182, 135, 211, 148, 92, 128, 168, 178, 203, 26, 73, 65}
+	result := hex.EncodeToString(byteArray)
+	fmt.Printf("Encoded Hex result: %v \n", result)
 
 }

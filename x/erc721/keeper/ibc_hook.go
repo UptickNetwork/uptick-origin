@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/bianjieai/nft-transfer/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
@@ -29,6 +30,9 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
+
+		errInfo := ack.GetError()
+		fmt.Printf("xxl:---- 5 errorInfo is : %v \n", errInfo)
 		if strings.Contains(data.Memo, ercTypes.TransferERC721Memo) {
 			k.RefundPacketToken(ctx, data)
 		} else if strings.Contains(data.Memo, cwTypes.TransferCW721Memo) {
